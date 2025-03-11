@@ -10,42 +10,41 @@ import (
 
 type repository struct {
 	mu     sync.RWMutex
-	movies map[uuid.UUID]*Movie
+	movies map[string]*Movie
 }
 
 type Repository interface {
-	CreateMovie(ctx context.Context, film *Movie) (uuid.UUID, error)
-	GetAllMovies(ctx context.Context) (map[uuid.UUID]*Movie, error)
-	GetMovieByID(ctx context.Context, uuid uuid.UUID) (*Movie, error)
-	UpdateMovie(ctx context.Context, film *Movie) error
-	DeleteMovie(ctx context.Context, uuid uuid.UUID) error
+	CreateMovie(ctx context.Context, film *Movie) (string, error)
+	GetAllMovies(ctx context.Context) (map[string]*Movie, error)
+	GetMovieByID(ctx context.Context, uuid string) (*Movie, error)
+	UpdateMovie(ctx context.Context, uuid string, film *Movie) error
+	DeleteMovie(ctx context.Context, uuid string) error
 }
 
 func NewRepository(ctx context.Context) (Repository, error) {
-	return &repository{movies: make(map[uuid.UUID]*Movie)}, nil
+	return &repository{movies: make(map[string]*Movie)}, nil
 }
 
-func (r *repository) CreateMovie(ctx context.Context, movie *Movie) (uuid.UUID, error) {
+func (r *repository) CreateMovie(ctx context.Context, movie *Movie) (string, error) {
 	if err := r.checkIfExists(movie); err != nil {
-		return uuid.Nil, err
+		return "", err
 	}
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	uuid := uuid.New()
-	movie.UUID = uuid
+	uuid := uuid.New().String()
 	r.movies[uuid] = movie
 
 	return uuid, nil
 }
 
-func (r *repository) GetAllMovies(ctx context.Context) (map[uuid.UUID]*Movie, error) {
+func (r *repository) GetAllMovies(ctx context.Context) (map[string]*Movie, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.movies, nil
 }
 
-func (r *repository) GetMovieByID(ctx context.Context, uuid uuid.UUID) (*Movie, error) {
+func (r *repository) GetMovieByID(ctx context.Context, uuid string) (*Movie, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -57,21 +56,21 @@ func (r *repository) GetMovieByID(ctx context.Context, uuid uuid.UUID) (*Movie, 
 	return movie, nil
 }
 
-func (r *repository) UpdateMovie(ctx context.Context, movie *Movie) error {
+func (r *repository) UpdateMovie(ctx context.Context, uuid string, movie *Movie) error {
 	r.mu.RLock()
-	_, exists := r.movies[movie.UUID]
+	_, exists := r.movies[uuid]
 	if !exists {
-		return fmt.Errorf("Film with uuid %s not found", movie.UUID)
+		return fmt.Errorf("Film with uuid %s not found", uuid)
 	}
 	r.mu.RUnlock()
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.movies[movie.UUID] = movie // так как в задании сказано использовать метод PUT, я просто новую версию фильма (можно было бы обновить конкретные поля, но тогда должен быть метод PATCH)
+	r.movies[uuid] = movie // так как в задании сказано использовать метод PUT, я просто новую версию фильма (можно было бы обновить конкретные поля, но тогда должен быть метод PATCH)
 	return nil
 }
 
-func (r *repository) DeleteMovie(ctx context.Context, uuid uuid.UUID) error {
+func (r *repository) DeleteMovie(ctx context.Context, uuid string) error {
 	r.mu.RLock()
 	_, exists := r.movies[uuid]
 	if !exists {
@@ -82,7 +81,7 @@ func (r *repository) DeleteMovie(ctx context.Context, uuid uuid.UUID) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	delete(r.movies, uuid)
-	
+
 	return nil
 }
 
