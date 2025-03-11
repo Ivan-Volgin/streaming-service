@@ -17,3 +17,7 @@ type UpdateMovieRequest struct {
 type GetMovieRequest struct {
 	UUID string `json:"uuid"`
 }
+
+type DeleteMovieRequest struct {
+	UUID string `json:"uuid"`
+}

@@ -129,20 +129,20 @@ func (s *service) UpdateMovie(ctx *fiber.Ctx) error {
 }
 
 func (s *service) DeleteMovie(ctx *fiber.Ctx) error {
-	var uuid string
-	if err := json.Unmarshal(ctx.Body(), &uuid); err != nil {
+	var req DeleteMovieRequest
+	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
 		s.log.Error("Invalid request body", zap.Error(err))
 		return dto.BadRequestError(ctx, dto.FieldBadFormat, "Invalid request body")
 	}
 
-	if err := s.repo.DeleteMovie(ctx.Context(), uuid); err != nil {
+	if err := s.repo.DeleteMovie(ctx.Context(), req.UUID); err != nil {
 		s.log.Error("Failed to delete movie", zap.Error(err))
 		return dto.InternalServerError(ctx)
 	}
 
 	response := dto.Response{
 		Status: "success",
-		Data:   uuid,
+		Data:   req.UUID,
 	}
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }
