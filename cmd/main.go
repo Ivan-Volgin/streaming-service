@@ -12,9 +12,9 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 
-	customLogger "streaming-service/internal/logger"
 	"streaming-service/internal/api"
 	"streaming-service/internal/config"
+	customLogger "streaming-service/internal/logger"
 	"streaming-service/internal/service"
 )
 
@@ -33,7 +33,7 @@ func main() {
 		log.Fatal(errors.Wrap(err, "failed to initialize logger"))
 	}
 
-	repository, err := repo.NewRepository(context.Background())
+	repository, err := repo.NewRepository(context.Background(), config.PostgreSQL{})
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "failed to initialize repository"))
 	}
