@@ -27,20 +27,23 @@ func main() {
 	if err := envconfig.Process("", &cfg); err != nil {
 		log.Fatal(errors.Wrap(err, "failed to process configuration"))
 	}
-
+	
 	logger, err := customLogger.NewLogger(cfg.LogLevel)
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "failed to initialize logger"))
 	}
 
-	repository, err := repo.NewRepository(context.Background(), config.PostgreSQL{})
+	repository, err := repo.NewRepository(context.Background(), cfg.PostgreSQL)
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "failed to initialize repository"))
 	}
 
-	serviceInstance := service.NewService(repository, logger)
+	serviceInstance := service.NewService(repository.MovieRepo, repository.OwnerRepo, logger)
 
-	app := api.NewRouters(&api.Routers{Service: serviceInstance}, cfg.Rest.Token)
+	app := api.NewRouters(&api.Routers{
+		MovieService: serviceInstance,
+		OwnerService: serviceInstance,
+	}, cfg.Rest.Token)
 
 	go func() {
 		logger.Infof("Starting server on %s", cfg.Rest.ListenAddress)

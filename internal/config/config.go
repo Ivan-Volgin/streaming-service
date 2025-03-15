@@ -3,8 +3,9 @@ package config
 import "time"
 
 type AppConfig struct {
-	LogLevel string
-	Rest     Rest
+	LogLevel   string
+	Rest       Rest
+	PostgreSQL PostgreSQL
 }
 
 type Rest struct {
