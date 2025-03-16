@@ -65,7 +65,6 @@ func (r *repository) GetAllMovies(ctx context.Context, limit, offset int) (map[s
 		var movie Movie
 		var uuid string
 
-		// Сканируем все столбцы одновременно
 		err := rows.Scan(&uuid, &movie.Title, &movie.Author, &movie.Description, &movie.Year)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to scan movie row")

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
-	pgxMigrate "github.com/golang-migrate/migrate/v4/database/pgx" // Алиас для migrate/pgx
-	_ "github.com/golang-migrate/migrate/v4/source/file"           // Поддержка чтения миграций из файлов
-	"github.com/jackc/pgx/v5"                                      // Основной пакет pgx
-	"github.com/jackc/pgx/v5/pgxpool"                              // Пул соединений
+	pgxMigrate "github.com/golang-migrate/migrate/v4/database/pgx"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pkg/errors"
 	"streaming-service/internal/config"
@@ -49,10 +49,10 @@ func NewRepository(ctx context.Context, cfg config.PostgreSQL) (*Repositories, e
 		return nil, errors.Wrap(err, "failed to create PostgreSQL connection pool")
 	}
 
-	if err := applyMigrations(pool, cfg); err != nil {
+	if err := applyMigrations(pool); err != nil {
 		return nil, errors.Wrap(err, "failed to apply migrations")
 	}
-	
+
 	baseRepo := &repository{pool}
 
 	return &Repositories{
@@ -61,7 +61,7 @@ func NewRepository(ctx context.Context, cfg config.PostgreSQL) (*Repositories, e
 	}, nil
 }
 
-func applyMigrations(pool *pgxpool.Pool, cfg config.PostgreSQL) error {
+func applyMigrations(pool *pgxpool.Pool) error {
 	sqlDB := stdlib.OpenDBFromPool(pool)
 	defer sqlDB.Close()
 
