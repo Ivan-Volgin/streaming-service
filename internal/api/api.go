@@ -26,14 +26,14 @@ func NewRouters(r *Routers, token string) *fiber.App {
 	apiGroup.Post("/movies", r.MovieService.CreateMovie)
 	apiGroup.Get("/movies/:id", r.MovieService.GetMovie)
 	apiGroup.Get("/movies", r.MovieService.GetAllMovies)
-	apiGroup.Put("/movies/:id", r.MovieService.UpdateMovie)
+	apiGroup.Put("/movies/", r.MovieService.UpdateMovie)
 	apiGroup.Delete("/movies/:id", r.MovieService.DeleteMovie)
 
 	apiGroup.Post("/owners", r.OwnerService.CreateOwner)
 	apiGroup.Get("/owners/id/:id", r.OwnerService.GetOwnerByUUID)
 	apiGroup.Get("/owners/name/:name", r.OwnerService.GetOwnerByName)
 	apiGroup.Get("/owners", r.OwnerService.GetAllOwners)
-	apiGroup.Put("/owners/:id", r.OwnerService.UpdateOwner)
+	apiGroup.Put("/owners/", r.OwnerService.UpdateOwner)
 	apiGroup.Delete("/owners/:id", r.OwnerService.DeleteOwner)
 
 	return app
