@@ -17,12 +17,12 @@ type repository struct {
 	pool *pgxpool.Pool
 }
 
-type Repositories struct {
-	MovieRepo MovieRepository
-	OwnerRepo OwnerRepository
+type Repositories interface {
+	MovieRepository
+	OwnerRepository
 }
 
-func NewRepository(ctx context.Context, cfg config.PostgreSQL) (*Repositories, error) {
+func NewRepository(ctx context.Context, cfg config.PostgreSQL) (Repositories, error) {
 	connString := fmt.Sprintf(
 		`user=%s password=%s host=%s port=%d dbname=%s sslmode=%s
        pool_max_conns=%d pool_max_conn_lifetime=%s pool_max_conn_idle_time=%s`,
@@ -53,12 +53,7 @@ func NewRepository(ctx context.Context, cfg config.PostgreSQL) (*Repositories, e
 		return nil, errors.Wrap(err, "failed to apply migrations")
 	}
 
-	baseRepo := &repository{pool}
-
-	return &Repositories{
-		MovieRepo: baseRepo,
-		OwnerRepo: baseRepo,
-	}, nil
+	return &repository{pool}, nil
 }
 
 func applyMigrations(pool *pgxpool.Pool) error {

@@ -38,7 +38,6 @@ func (r *repository) CreateMovie(ctx context.Context, movie *Movie, ownerName st
 			}
 			ownerUUID = newOwnerUUID
 		} else {
-			// Другая ошибка при выполнении запроса
 			return "", fmt.Errorf("owner of movie not found, failed to query owner: %w", err)
 		}
 	} else {
@@ -84,6 +83,9 @@ func (r *repository) GetMovieByID(ctx context.Context, uuid string) (*Movie, err
 
 	err := r.pool.QueryRow(ctx, getMovieQuery, uuid).Scan(&movie.Title, &movie.Author, &movie.Description, &movie.Year)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errors.Wrap(err, "movie not found")
+		}
 		return nil, errors.Wrap(err, "failed to query movie")
 	}
 

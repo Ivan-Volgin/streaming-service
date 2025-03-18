@@ -6,6 +6,7 @@ const (
 	FieldBadFormat     = "FIELD_BADFORMAT"
 	ServiceUnavailable = "SERVICE_UNAVAILABLE"
 	InternalError      = "Service is currently unavailable. Please try again later."
+	FieldRequired      = "FIELD_REQUIRED" // Новая константа
 )
 
 type Response struct {

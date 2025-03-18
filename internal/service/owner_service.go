@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
+	"strconv"
 	"streaming-service/internal/dto"
 	"streaming-service/internal/repo"
 )
@@ -43,14 +44,11 @@ func (s *service) CreateOwner(ctx *fiber.Ctx) error {
 }
 
 func (s *service) GetOwnerByUUID(ctx *fiber.Ctx) error {
-	var req GetOwnerByUUIDRequest
-
-	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
-		s.log.Error("Invalid request body", zap.Error(err))
-		return dto.BadRequestError(ctx, dto.FieldBadFormat, "Invalid request body")
+	uuid := ctx.Params("uuid")
+	if uuid == "" {
+		s.log.Error("Missing UUID in URL parameters", zap.String("uuid", uuid))
+		return dto.BadRequestError(ctx, dto.FieldRequired, "Missing UUID in URL parameters")
 	}
-
-	uuid := req.UUID
 
 	owner, err := s.ownerRepo.GetOwnerByID(ctx.Context(), uuid)
 	if err != nil {
@@ -70,14 +68,11 @@ func (s *service) GetOwnerByUUID(ctx *fiber.Ctx) error {
 }
 
 func (s *service) GetOwnerByName(ctx *fiber.Ctx) error {
-	var req GetOwnerByNameRequest
-
-	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
-		s.log.Error("Invalid request body", zap.Error(err))
-		return dto.BadRequestError(ctx, dto.FieldBadFormat, "Invalid request body")
+	name := ctx.Params("name")
+	if name == "" {
+		s.log.Error("Missing name in URL parameters", zap.String("name", name))
+		return dto.BadRequestError(ctx, dto.FieldRequired, "Missing name in URL parameters")
 	}
-
-	name := req.Name
 
 	owner, err := s.ownerRepo.GetOwnerByName(ctx.Context(), name)
 	if err != nil {
@@ -97,7 +92,21 @@ func (s *service) GetOwnerByName(ctx *fiber.Ctx) error {
 }
 
 func (s *service) GetAllOwners(ctx *fiber.Ctx) error {
-	owners, err := s.ownerRepo.GetAllOwners(ctx.Context(), 10, 0)
+	limitStr := ctx.Query("limit", "10")
+	offsetStr := ctx.Query("offset", "0")
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 0 {
+		s.log.Error("Invalid limit parameter", zap.Error(err))
+		return dto.BadRequestError(ctx, dto.FieldBadFormat, "Invalid or missing 'limit' parameter")
+	}
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil || offset < 0 {
+		s.log.Error("Invalid offset parameter", zap.Error(err))
+		return dto.BadRequestError(ctx, dto.FieldBadFormat, "Invalid or missing 'offset' parameter")
+	}
+	owners, err := s.ownerRepo.GetAllOwners(ctx.Context(), limit, offset)
 	if err != nil {
 		s.log.Error("Failed to get owners", zap.Error(err))
 		return dto.InternalServerError(ctx)
@@ -136,20 +145,20 @@ func (s *service) UpdateOwner(ctx *fiber.Ctx) error {
 }
 
 func (s *service) DeleteOwner(ctx *fiber.Ctx) error {
-	var req DeleteOwnerRequest
-	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
-		s.log.Error("Invalid request body", zap.Error(err))
-		return dto.BadRequestError(ctx, dto.FieldBadFormat, "Invalid request body")
+	uuid := ctx.Params("uuid")
+	if uuid == "" {
+		s.log.Error("Missing UUID in URL parameters", zap.String("uuid", uuid))
+		return dto.BadRequestError(ctx, dto.FieldRequired, "Missing UUID in URL parameters")
 	}
 
-	if err := s.ownerRepo.DeleteOwner(ctx.Context(), req.UUID); err != nil {
+	if err := s.ownerRepo.DeleteOwner(ctx.Context(), uuid); err != nil {
 		s.log.Error("Failed to delete owner", zap.Error(err))
 		return dto.InternalServerError(ctx)
 	}
 
 	response := dto.Response{
 		Status: "success",
-		Data:   req.UUID,
+		Data:   uuid,
 	}
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }

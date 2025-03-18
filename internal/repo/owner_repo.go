@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
 )
 
@@ -65,6 +66,9 @@ func (r *repository) GetOwnerByID(ctx context.Context, uuid string) (*Owner, err
 
 	err := r.pool.QueryRow(ctx, getOwnerByIdQuery, uuid).Scan(&owner.Name, &owner.Created_at)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errors.Wrap(err, "owner not found")
+		}
 		return nil, errors.Wrap(err, "failed to query owner by uuid")
 	}
 
@@ -76,8 +80,12 @@ func (r *repository) GetOwnerByName(ctx context.Context, name string) (*Owner, e
 
 	err := r.pool.QueryRow(ctx, getOwnerByNameQuery, name).Scan(&owner.UUID, &owner.Created_at)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to query owner by name")
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errors.Wrap(err, "owner not found")
+		}
+		return nil, errors.Wrap(err, "failed to query owner by uuid")
 	}
+
 	return owner, nil
 }
 

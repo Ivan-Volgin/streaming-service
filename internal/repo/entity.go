@@ -4,7 +4,7 @@ import "time"
 
 type Movie struct {
 	UUID        string    `json:"uuid"`
-	Owner_id    string    `json:"owner_id"`
+	OwnerID     string    `json:"owner_id"`
 	Title       string    `json:"title"`
 	Author      string    `json:"author"`
 	Description string    `json:"description"`
