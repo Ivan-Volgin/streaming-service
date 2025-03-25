@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pkg/errors"
 	"streaming-service/internal/config"
+	"time"
 )
 
 type repository struct {
@@ -20,6 +21,7 @@ type repository struct {
 type Repositories interface {
 	MovieRepository
 	OwnerRepository
+	Close()
 }
 
 func NewRepository(ctx context.Context, cfg config.PostgreSQL) (Repositories, error) {
@@ -75,10 +77,40 @@ func applyMigrations(pool *pgxpool.Pool) error {
 		return errors.Wrap(err, "failed to create migrate instance")
 	}
 
-	// Применяем миграции
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return errors.Wrap(err, "failed to apply migrations")
 	}
 
 	return nil
+}
+
+func (r *repository) Close() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Выполняем запрос, который задерживает выполнение на 3 секунды, чтобы увидеть 1 используемый коннект
+	go func() {
+		fmt.Println("Выполняется запрос SELECT pg_sleep(3)...")
+		_, err := r.pool.Exec(ctx, "SELECT pg_sleep(3)")
+		if err != nil {
+			fmt.Errorf("Ошибка выполнения запроса: %v", err)
+		}
+
+		fmt.Println("Запрос выполнен успешно")
+	}()
+
+	time.Sleep(5 * time.Second)
+	stats := r.pool.Stat()
+
+	fmt.Println(float64(stats.MaxConns()))
+	fmt.Println(float64(stats.TotalConns())) // занято 1 соединение
+
+	if r.pool != nil {
+		r.pool.Close()
+	}
+
+	stats = r.pool.Stat()
+
+	fmt.Println(float64(stats.MaxConns()))
+	fmt.Println(float64(stats.TotalConns())) // 0 занятых соединений
 }

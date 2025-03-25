@@ -16,10 +16,10 @@ type Service interface {
 	OwnerService
 }
 
-func NewService(movieRepo repo.MovieRepository, ownerRepo repo.OwnerRepository, logger *zap.SugaredLogger) Service {
+func NewService(repo repo.Repositories, logger *zap.SugaredLogger) Service {
 	return &service{
-		movieRepo: movieRepo,
-		ownerRepo: ownerRepo,
+		movieRepo: repo,
+		ownerRepo: repo,
 		log:       logger,
 	}
 }
